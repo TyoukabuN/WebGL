@@ -1,10 +1,13 @@
 <html>
 <head>
 	<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r71/three.min.js"></script>
-	<script id="fragShader">
+	<script id="fragShader" type="shader-code">
+		uniform vec2 iResolution;
+		uniform sampler2D iChannel0;
 		void main()
 		{
-			gl_FragColor = vec4(1.0,1.0,1.0,1.0);
+			vec2 uv = gl_FragCoord.xy/iResolution.xy;
+			gl_FragColor = texture2D(iChannel0,uv);
 		}
 	</script>
 	<style>
@@ -13,6 +16,7 @@
 	</style>
 </head>
 <body>
+	<p id="FPS">FPS</p>
 	<script>
 		//@author Omar Shehata. 2015.
 		//We are loading the Three.js library from the cdn here: http://cdnjs.com/libraries/three.js/
@@ -36,17 +40,36 @@
 		scene_setup();
 
 		//Add your code here!
+		THREE.ImageUtils.crossOrigin = '';
+		var tex = THREE.ImageUtils.loadTexture("tex.jpg");
+
+		var uniforms = {}
+		uniforms.iResolution = {type:'v2',value:new THREE.Vector2(window.innerWidth,window.innerHeight)};
+		uniforms.iChannel0 = {type:'t',value:tex};
+
 		var shaderCode = document.getElementById("fragShader").innerHTML;
 
-		var material = new THREE.ShaderMaterial({fragmentShader:shaderCode});
+		var material = new THREE.ShaderMaterial({fragmentShader:shaderCode,uniforms:uniforms});
 		var geometry = new THREE.PlaneGeometry(10,10);
 		var sprite = new THREE.Mesh(geometry,material);
 		scene.add(sprite);
 		sprite.position.z = -1;
 		
+		var frameCost = (new Date()).getTime()/1000;
+		function showFPS()
+		{
+			var temp = (new Date()).getTime()/1000;
+			var frameRate = 1/(temp-frameCost);
+			frameCost = temp;
+			document.getElementById("FPS").innerHTML = "FPS:"+Math.floor(frameRate);
+		}
 
 		//Render everything!
 		function render() {
+			showFPS();
+
+			uniforms.iResolution.value.x = window.innerWidth;
+			uniforms.iResolution.value.x = window.innerHeight;
 			requestAnimationFrame( render );
 			renderer.render( scene, camera );
 		}
