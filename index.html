@@ -1,6 +1,12 @@
 <html>
 <head>
 	<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r71/three.min.js"></script>
+	<script id="fragShader">
+		void main()
+		{
+			gl_fragColor = vec4(1.0,1.0,1.0,1.0);
+		}
+	</script>
 	<style>
 		/* We want our scene to span the entire window */
 		body { margin: 0; }
