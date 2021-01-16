@@ -4,7 +4,7 @@
 	<script id="fragShader">
 		void main()
 		{
-			gl_fragColor = vec4(1.0,1.0,1.0,1.0);
+			gl_FragColor = vec4(1.0,1.0,1.0,1.0);
 		}
 	</script>
 	<style>
@@ -36,16 +36,17 @@
 		scene_setup();
 
 		//Add your code here!
-        var geometry = new THREE.BoxGeometry(1,1,1);
-        var material = new THREE.MeshBasicMaterial({color:0x00ff00});
-        var cube = new THREE.Mesh(geometry,material);
-        scene.add(cube);
-        cube.position.z = -3;
+		var shaderCode = document.getElementById("fragShader").innerHTML;
+
+		var material = new THREE.ShaderMaterial({fragmentShader:shaderCode});
+		var geometry = new THREE.PlaneGeometry(10,10);
+		var sprite = new THREE.Mesh(geometry,material);
+		scene.add(sprite);
+		sprite.position.z = -1;
 		
 
 		//Render everything!
 		function render() {
-			cube.rotation.y += 0.05;
 			requestAnimationFrame( render );
 			renderer.render( scene, camera );
 		}
