@@ -17,14 +17,20 @@
 			vec4 texColor = texture2D(iChannel0,uv);
 			float grayScale = texColor.r *0.3 + texColor.g *0.59 + texColor.b * 0.11;
 			vec4 gray = vec4(grayScale,grayScale,grayScale,1.0);
-			vec4 color = lerp(gray,texColor,sin(iTime)/2.0+0.5);
+			vec4 color = lerp(gray,texColor,(sin(iTime*3.0)/2.0+0.5));
 
-			if(distance(uv.xy,lightFragCoord.xy)>light.z)
+			float dist = distance(uv.xy,lightFragCoord.xy);
+			float z = light.z * (1.0 + (sin(iTime*3.0)/2.0+0.5) * 0.2);
+			float factor = 1.0;
+			if(dist>z)
 			{
 				color = vec4(0.0,0.0,0.0,1.0);
+			}else
+			{
+				factor = 1.0 - dist/z;
 			}
 
-			gl_FragColor = color;
+			gl_FragColor = color * factor;
 		}
 	</script>
 	<style>
@@ -58,8 +64,8 @@
 
 		//Add your code here!
 		THREE.ImageUtils.crossOrigin = '';
-		// var tex = THREE.ImageUtils.loadTexture("tex.jpg");
-		var tex = THREE.ImageUtils.loadTexture("https://raw.githubusercontent.com/tutsplus/Beginners-Guide-to-Shaders/master/Part3/images/blocks.JPG");
+		var tex = THREE.ImageUtils.loadTexture("tex.jpg");
+		// var tex = THREE.ImageUtils.loadTexture("https://raw.githubusercontent.com/tutsplus/Beginners-Guide-to-Shaders/master/Part3/images/blocks.JPG");
 
 		var uniforms = {}
 		uniforms.iResolution = 	{type:'v2',value:new THREE.Vector2(window.innerWidth,window.innerHeight)};
