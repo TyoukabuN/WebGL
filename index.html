@@ -4,10 +4,18 @@
 	<script id="fragShader" type="shader-code">
 		uniform vec2 iResolution;
 		uniform sampler2D iChannel0;
+		uniform float iTime;
+		vec4 lerp(vec4 a,vec4 b,float f)
+		{
+			return a + f * (b - a);
+		}
 		void main()
 		{
 			vec2 uv = gl_FragCoord.xy/iResolution.xy;
-			gl_FragColor = texture2D(iChannel0,uv);
+			vec4 texColor = texture2D(iChannel0,uv);
+			float grayScale = texColor.r *0.3 + texColor.g *0.59 + texColor.b * 0.11;
+			vec4 gray = vec4(grayScale,grayScale,grayScale,1.0);
+			gl_FragColor = lerp(gray,texColor,sin(iTime)/2.0+0.5);
 		}
 	</script>
 	<style>
@@ -46,6 +54,7 @@
 		var uniforms = {}
 		uniforms.iResolution = {type:'v2',value:new THREE.Vector2(window.innerWidth,window.innerHeight)};
 		uniforms.iChannel0 = {type:'t',value:tex};
+		uniforms.iTime = {type:'f',value:(new Date()).getTime()/1000%60};
 
 		var shaderCode = document.getElementById("fragShader").innerHTML;
 
@@ -70,6 +79,8 @@
 
 			uniforms.iResolution.value.x = window.innerWidth;
 			uniforms.iResolution.value.x = window.innerHeight;
+			uniforms.iTime.value =(new Date()).getTime()/1000%60;
+
 			requestAnimationFrame( render );
 			renderer.render( scene, camera );
 		}
