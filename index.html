@@ -5,6 +5,7 @@
 		uniform vec2 iResolution;
 		uniform sampler2D iChannel0;
 		uniform float iTime;
+		uniform vec3 light;
 		vec4 lerp(vec4 a,vec4 b,float f)
 		{
 			return a + f * (b - a);
@@ -12,10 +13,18 @@
 		void main()
 		{
 			vec2 uv = gl_FragCoord.xy/iResolution.xy;
+			vec2 lightFragCoord = light.xy/iResolution.xy;
 			vec4 texColor = texture2D(iChannel0,uv);
 			float grayScale = texColor.r *0.3 + texColor.g *0.59 + texColor.b * 0.11;
 			vec4 gray = vec4(grayScale,grayScale,grayScale,1.0);
-			gl_FragColor = lerp(gray,texColor,sin(iTime)/2.0+0.5);
+			vec4 color = lerp(gray,texColor,sin(iTime)/2.0+0.5);
+
+			if(distance(uv.xy,lightFragCoord.xy)>light.z)
+			{
+				color = vec4(0.0,0.0,0.0,1.0);
+			}
+
+			gl_FragColor = color;
 		}
 	</script>
 	<style>
@@ -49,12 +58,21 @@
 
 		//Add your code here!
 		THREE.ImageUtils.crossOrigin = '';
-		var tex = THREE.ImageUtils.loadTexture("tex.jpg");
+		// var tex = THREE.ImageUtils.loadTexture("tex.jpg");
+		var tex = THREE.ImageUtils.loadTexture("https://raw.githubusercontent.com/tutsplus/Beginners-Guide-to-Shaders/master/Part3/images/blocks.JPG");
 
 		var uniforms = {}
-		uniforms.iResolution = {type:'v2',value:new THREE.Vector2(window.innerWidth,window.innerHeight)};
-		uniforms.iChannel0 = {type:'t',value:tex};
-		uniforms.iTime = {type:'f',value:(new Date()).getTime()/1000%60};
+		uniforms.iResolution = 	{type:'v2',value:new THREE.Vector2(window.innerWidth,window.innerHeight)};
+		uniforms.iChannel0 = 	{type:'t',value:tex};
+		uniforms.iTime = 		{type:'f',value:(new Date()).getTime()/1000%60};
+		uniforms.light = 		{type:'v3',value:new THREE.Vector3(0.0,0.0,0.2)};
+
+		document.onmousemove = function(event)
+		{
+			uniforms.light.value.x = event.clientX;
+			uniforms.light.value.y = window.innerHeight - event.clientY;
+		}
+
 
 		var shaderCode = document.getElementById("fragShader").innerHTML;
 
@@ -62,8 +80,7 @@
 		var geometry = new THREE.PlaneGeometry(10,10);
 		var sprite = new THREE.Mesh(geometry,material);
 		scene.add(sprite);
-		sprite.position.z = -1;
-		
+		sprite.position.z = -10;
 		var frameCost = (new Date()).getTime()/1000;
 		function showFPS()
 		{
