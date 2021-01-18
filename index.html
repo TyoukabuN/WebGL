@@ -1,7 +1,7 @@
 <html>
 <head>
-	<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r71/three.min.js"></script>
-	<script src="https://mrdoob.github.io/stats.js/build/stats.min.js"></script>
+	<script type='text/javascript' src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r71/three.min.js"></script>
+	<script id="stats" type='text/javascript' async='async' src="https://mrdoob.github.io/stats.js/build/stats.min.js"></script>
 	<script id="fragShader" type="shader-code">
 		uniform vec2 iResolution;
 		uniform sampler2D iChannel0;
@@ -42,23 +42,28 @@
 <body  style="background-color: black">
 	<!-- <h2 id="FPS" style="color: white;">FPS</h2> -->
 	<script>
-		var stats = new Stats();
-		stats.showPanel( 1 ); // 0: fps, 1: ms, 2: mb, 3+: custom
-		document.body.appendChild( stats.dom );
+		var script = document.getElementById('stats');
+		script.onload = function()
+			{
+				var stats = new Stats();
+				stats.showPanel( 1 ); // 0: fps, 1: ms, 2: mb, 3+: custom
+				document.body.appendChild( stats.dom );
+				
+				function animate() {
+					
+					stats.begin();
+					
+					// monitored code goes here
+					
+					stats.end();
+					
+					requestAnimationFrame( animate );
+					
+				}
+				
+				requestAnimationFrame( animate );
+			};
 
-		function animate() {
-
-			stats.begin();
-
-			// monitored code goes here
-
-			stats.end();
-
-			requestAnimationFrame( animate );
-
-		}
-
-		requestAnimationFrame( animate );
 
 		//@author Omar Shehata. 2015.
 		//We are loading the Three.js library from the cdn here: http://cdnjs.com/libraries/three.js/
