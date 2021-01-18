@@ -1,0 +1,132 @@
+<html>
+<head>
+	<script type='text/javascript' src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r71/three.min.js"></script>
+	<script id="stats" type='text/javascript' async='async' src="https://mrdoob.github.io/stats.js/build/stats.min.js"></script>
+	<script id="fragShader" type="shader-code">
+		uniform vec2 iResolution;
+		uniform sampler2D iChannel0;
+		uniform float iTime;
+		uniform vec3 light;
+		uniform sampler2D bufferTexture;
+		vec4 lerp(vec4 a,vec4 b,float f)
+		{
+			return a + f * (b - a);
+		}
+		void main()
+		{
+			vec2 uv = gl_FragCoord.xy/iResolution;
+			gl_FragColor = texture2D(bufferTexture,uv);
+			gl_FragColor.r += 0.01;
+		}
+	</script>
+	<style>
+		/* We want our scene to span the entire window */
+		body { margin: 0; }
+	</style>
+</head>
+<body  style="background-color: black">
+	<!-- <h2 id="FPS" style="color: white;">FPS</h2> -->
+	<script>
+		var script = document.getElementById('stats');
+		script.onload = function()
+			{
+				var stats = new Stats();
+				stats.showPanel( 1 ); // 0: fps, 1: ms, 2: mb, 3+: custom
+				document.body.appendChild( stats.dom );
+				
+				function animate() {
+					
+					stats.begin();
+					
+					// monitored code goes here
+					
+					stats.end();
+					
+					requestAnimationFrame( animate );
+					
+				}
+				
+				requestAnimationFrame( animate );
+			};
+
+
+		//@author Omar Shehata. 2015.
+		//We are loading the Three.js library from the cdn here: http://cdnjs.com/libraries/three.js/
+		var scene;
+		var camera;
+		var renderer;
+
+		function scene_setup(){
+			//This is all code needed to set up a basic ThreeJS scene
+
+			//First we initialize the scene and our camera
+			scene = new THREE.Scene();
+			camera = new THREE.PerspectiveCamera( 75, window.innerWidth / window.innerHeight, 0.1, 1000 );
+
+			//We create the WebGL renderer and add it to the document
+			renderer = new THREE.WebGLRenderer();
+			renderer.setSize( window.innerWidth, window.innerHeight );
+			document.body.appendChild( renderer.domElement );
+		} 
+
+		scene_setup();
+
+		//Add your code here!
+		THREE.ImageUtils.crossOrigin = '';
+		var tex = THREE.ImageUtils.loadTexture("tex.jpg");
+		// var tex = THREE.ImageUtils.loadTexture("https://raw.githubusercontent.com/tutsplus/Beginners-Guide-to-Shaders/master/Part3/images/blocks.JPG");
+
+		var uniforms = {}
+		uniforms.iResolution = 	{type:'v2',value:new THREE.Vector2(window.innerWidth,window.innerHeight)};
+		uniforms.iChannel0 = 	{type:'t',value:tex};
+		uniforms.iTime = 		{type:'f',value:(new Date()).getTime()/1000%60};
+		uniforms.light = 		{type:'v3',value:new THREE.Vector3(0.0,0.0,0.3)};
+
+		document.onmousemove = function(event)
+		{
+			uniforms.light.value.x = event.clientX;
+			uniforms.light.value.y = window.innerHeight - event.clientY;
+		}
+
+
+		var shaderCode = document.getElementById("fragShader").innerHTML;
+
+		var material = new THREE.ShaderMaterial({fragmentShader:shaderCode,uniforms:uniforms});
+		var geometry = new THREE.PlaneGeometry(10,10);
+		var sprite = new THREE.Mesh(geometry,material);
+		scene.add(sprite);
+
+		camera.position.z = 5;
+		var frameCost = (new Date()).getTime()/1000;
+		function showFPS()
+		{
+			var temp = (new Date()).getTime()/1000;
+			var frameRate = 1/(temp-frameCost);
+			frameCost = temp;
+			document.getElementById("FPS").innerHTML = "FPS:"+Math.floor(frameRate);
+		}
+
+		window.onresize = function()
+		{
+			camera.aspect = window.innerWidth/window.innerHeight;
+			camera.updateProjectionMatrix();
+
+			renderer.setSize( window.innerWidth, window.innerHeight );
+		}
+
+		//Render everything!
+		function render() {
+			// showFPS();
+
+			uniforms.iResolution.value.x = window.innerWidth;
+			uniforms.iResolution.value.x = window.innerHeight;
+			uniforms.iTime.value =(new Date()).getTime()/1000%60;
+
+			requestAnimationFrame( render );
+			renderer.render( scene, camera ); 
+		}
+		render();
+	</script>
+</body>
+
+</html>
