@@ -8,6 +8,7 @@
 		uniform float iTime;
 		uniform vec3 light;
 		uniform sampler2D bufferTexture;
+		uniform vec3 mousePos;
 		vec4 lerp(vec4 a,vec4 b,float f)
 		{
 			return a + f * (b - a);
@@ -15,17 +16,62 @@
 		void main()
 		{
 			vec2 uv = gl_FragCoord.xy/iResolution;
+
 			gl_FragColor = texture2D(bufferTexture,uv);
-			gl_FragColor.r += 0.01;
+
+			float dist = distance(mousePos.xy,gl_FragCoord.xy);
+			gl_FragColor.rgb += mousePos.z* 4.0 * max(20.0 - dist,0.0);
+
+			float pixelX = 1.0/iResolution.x;
+			float pixelY = 1.0/iResolution.y;
+
+			vec4 left = texture2D(bufferTexture,vec2(uv.x+pixelX,uv.y));
+			vec4 right = texture2D(bufferTexture,vec2(uv.x-pixelX,uv.y));
+			vec4 up = texture2D(bufferTexture,vec2(uv.x,uv.y+pixelY));
+			vec4 down = texture2D(bufferTexture,vec2(uv.x,uv.y-pixelY*2.0));
+
+			float factor = 14.0 * 0.016 * (
+				left.r + right.r + up.r + down.r - 4.0 * gl_FragColor.r
+			);
+
+			float minimum = 0.003;
+			if (factor >= -minimum && factor < 0.0)
+			{
+				factor = -minimum;
+			}
+			
+			gl_FragColor.rgb += factor;
 		}
-	</script>
+
+		//uniform vec2 res;//The width and height of our screen
+		//uniform sampler2D bufferTexture;//Our input texture
+		//uniform vec3 smokeSource;//The x,y are the posiiton. The z is the power/density
+		//void main() {
+		//	  vec2 pixel = gl_FragCoord.xy / res.xy;
+		//	  gl_FragColor = texture2D( bufferTexture, pixel );
+	
+		//	  //Get the distance of the current pixel from the smoke source
+		//	  float dist = distance(smokeSource.xy,gl_FragCoord.xy);
+		//	  //Generate smoke when mouse is pressed
+		 // gl_FragColor.rgb += smokeSource.z * max(15.0-dist,0.0);
+	  
+		 //Smoke diffuse
+		//	  float xPixel = 1.0/res.x;//The size of a single pixel
+		//	  float yPixel = 1.0/res.y;
+		//  vec4 rightColor = texture2D(bufferTexture,vec2(pixel.x+xPixel,pixel.y));
+		//  vec4 leftColor = texture2D(bufferTexture,vec2(pixel.x-xPixel,pixel.y));
+		//  vec4 upColor = texture2D(bufferTexture,vec2(pixel.x,pixel.y+yPixel));
+		//  vec4 downColor = texture2D(bufferTexture,vec2(pixel.x,pixel.y-yPixel));
+		  //Diffuse equation
+			  //gl_FragColor.rgb += 14.0 * 0.016 * (leftColor.rgb + rightColor.rgb + downColor.rgb + upColor.rgb - 4.0 * gl_FragColor.rgb);
+		 //}
+	</script> 
 	<style>
 		/* We want our scene to span the entire window */
 		body { margin: 0; }
 	</style>
 </head>
 <body  style="background-color: black">
-	<!-- <h2 id="FPS" style="color: white;">FPS</h2> -->
 	<script>
 		var script = document.getElementById('stats');
 		script.onload = function()
@@ -83,6 +129,7 @@
 		var bufferObject;
 		var finalMaterial;
 		var quad;
+		var uniforms;
 
 		function buffer_scene_setup()
 		{
@@ -102,54 +149,42 @@
 				minFilter:THREE.NearestFilter
 			});
 
-			bufferMaterial = new THREE.ShaderMaterial({
-				uniforms:{
+			uniforms = {
+					mousePos:{type:'v3',value:new THREE.Vector3(0.0,0.0,0.0)},
 					bufferTexture:{type:"t",value:textureA},
 					iResolution:{type:'v2',value:new THREE.Vector2(window.innerWidth,window.innerHeight)}
-				},
+				}
+			bufferMaterial = new THREE.ShaderMaterial({
+				uniforms:uniforms,
 				fragmentShader:document.getElementById('fragShader').innerHTML
 			})
 			plane = new THREE.PlaneBufferGeometry(width,height);
 			bufferObject = new THREE.Mesh(plane,bufferMaterial);
 			bufferScene.add(bufferObject);
 
+			finalMaterial = new THREE.MeshBasicMaterial({map:textureB});
+			quad = new THREE.Mesh(plane,finalMaterial);
+			scene.add(quad);
 		}
 
 		buffer_scene_setup();
-		//Add your code here!
-		THREE.ImageUtils.crossOrigin = '';
-		var tex = THREE.ImageUtils.loadTexture("tex.jpg");
-		// var tex = THREE.ImageUtils.loadTexture("https://raw.githubusercontent.com/tutsplus/Beginners-Guide-to-Shaders/master/Part3/images/blocks.JPG");
-
-		var uniforms = {}
-		uniforms.iResolution = 	{type:'v2',value:new THREE.Vector2(window.innerWidth,window.innerHeight)};
-		uniforms.iChannel0 = 	{type:'t',value:tex};
-		uniforms.iTime = 		{type:'f',value:(new Date()).getTime()/1000%60};
-		uniforms.light = 		{type:'v3',value:new THREE.Vector3(0.0,0.0,0.3)};
 
 		document.onmousemove = function(event)
 		{
-			uniforms.light.value.x = event.clientX;
-			uniforms.light.value.y = window.innerHeight - event.clientY;
+			// document.getElementById("FPS").innerHTML = event.clientX + " " + event.clientY;
+			bufferMaterial.uniforms.mousePos.value.x = event.clientX;
+			bufferMaterial.uniforms.mousePos.value.y = window.innerHeight - event.clientY;
 		}
-
-
-		var shaderCode = document.getElementById("fragShader").innerHTML;
-
-		var material = new THREE.ShaderMaterial({fragmentShader:shaderCode,uniforms:uniforms});
-		var geometry = new THREE.PlaneGeometry(10,10);
-		var sprite = new THREE.Mesh(geometry,material);
-		scene.add(sprite);
+		document.onmousedown = function(event)
+		{
+			bufferMaterial.uniforms.mousePos.value.z = 0.02;	
+		}
+		document.onmouseup = function(event)
+		{
+			bufferMaterial.uniforms.mousePos.value.z = 0;	
+		}
 
 		camera.position.z = 5;
-		var frameCost = (new Date()).getTime()/1000;
-		function showFPS()
-		{
-			var temp = (new Date()).getTime()/1000;
-			var frameRate = 1/(temp-frameCost);
-			frameCost = temp;
-			document.getElementById("FPS").innerHTML = "FPS:"+Math.floor(frameRate);
-		}
 
 		window.onresize = function()
 		{
@@ -161,13 +196,16 @@
 
 		//Render everything!
 		function render() {
-			// showFPS();
-
-			uniforms.iResolution.value.x = window.innerWidth;
-			uniforms.iResolution.value.x = window.innerHeight;
-			uniforms.iTime.value =(new Date()).getTime()/1000%60;
-
 			requestAnimationFrame( render );
+
+			renderer.render(bufferScene,camera,textureB,true)
+
+			var temp = textureB;
+			textureB = textureA;
+			textureA = temp;
+
+			quad.material.map = textureB;
+			bufferMaterial.uniforms.bufferTexture.value = textureA;
 			renderer.render( scene, camera ); 
 		}
 		render();
