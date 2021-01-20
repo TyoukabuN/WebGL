@@ -5,7 +5,7 @@
             uniform sampler2D mainTex;
             uniform sampler2D normalMap;
             uniform vec2 iResolution;
-            uniform vec3 iMouseSource; 
+            uniform vec3 iMouseSource;
             void main()
             {
                 vec2 uv = gl_FragCoord.xy/iResolution;
@@ -21,7 +21,7 @@
                 vec3 light = vec3(iMouseSource.xy/iResolution,0.5).xyz;
                 
                 
-                gl_FragColor = diffuse * max(dot(normalize(light),normalize(normal)),0.0)* (max(iMouseSource.z - dist,0.0)/iMouseSource.z);
+                gl_FragColor = diffuse * max(dot(normalize(light),normalize(normal)),0.0);
             }
         </script>
     </head>
