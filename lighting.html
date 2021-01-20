@@ -10,9 +10,8 @@
             {
                 vec2 uv = gl_FragCoord.xy/iResolution;
                 vec4 diffuse = texture2D(mainTex,uv);
-                vec4 normal = texture2D(normalMap,uv);
+                vec3 normal = texture2D(normalMap,uv).rgb;
                 normal.z = 0.8;
-                normal.w = 1.0;
 
                 normal *= 4.0;
 
@@ -22,8 +21,7 @@
                 vec3 light = vec3(iMouseSource.xy/iResolution,0.5).xyz;
                 
                 
-                gl_FragColor = diffuse * max(dot(normalize(light),normalize(normal.rgb)),0.0);
-                //gl_FragColor = vec4(normalize(light),1.0) ;
+                gl_FragColor = diffuse * max(dot(normalize(light),normalize(normal)),0.0)* (max(iMouseSource.z - dist,0.0)/iMouseSource.z);
             }
         </script>
     </head>
