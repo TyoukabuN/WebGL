@@ -1,0 +1,94 @@
+<html>
+    <head>
+	    <script type='text/javascript' src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r71/three.min.js"></script>
+        <script id = "fragmentShader" type="shader-code">
+            uniform sampler2D mainTex;
+            uniform sampler2D normalMap;
+            uniform vec2 iResolution;
+            uniform vec3 iMouseSource;
+            void main()
+            {
+                vec2 uv = gl_FragCoord.xy/iResolution;
+                vec4 diffuse = texture2D(mainTex,uv);
+                vec4 normal = texture2D(normalMap,uv)* 2.0 -1.0 ;
+
+                float dist = distance(gl_FragCoord.xy,iMouseSource.xy);
+                //gl_FragColor = diffuse * (max(iMouseSource.z - dist,0.0)/iMouseSource.z);
+
+                vec3 light = normalize(vec3(iMouseSource.xy,1.0));
+                
+                
+                gl_FragColor = diffuse * max(dot(light,normalize(normal.rgb)),0.0);
+            }
+        </script>
+    </head>
+    <style>
+        body {margin: 0;}
+    </style>
+    <body>
+        <script>
+            var width = window.innerWidth;
+            var height = window.innerHeight;
+
+            var scene;
+            var camera;
+            var renderer;
+
+            function load_scene()
+            {
+                scene = new THREE.Scene();
+                camera = new THREE.OrthographicCamera(width/-2,width/2,height/2,height/-2,1,1000);
+
+                renderer = new THREE.WebGLRenderer();
+                renderer.setSize(width,height);
+                document.body.appendChild(renderer.domElement);
+
+                camera.position.z = 5;
+            }
+
+            load_scene();
+
+            THREE.ImageUtils.crossOrigin = '';//Allows us to load an external image
+
+            var textureURL = "https://raw.githubusercontent.com/tutsplus/Beginners-Guide-to-Shaders/master/Part3/images/blocks.JPG"
+            var texture = THREE.ImageUtils.loadTexture(textureURL);
+
+            var normalURL = "https://raw.githubusercontent.com/tutsplus/Beginners-Guide-to-Shaders/master/Part3/normal_maps/blocks_normal.JPG"
+            var normalMap =THREE.ImageUtils.loadTexture(normalURL,{
+                magFilter:THREE.LinearFilter,
+            });
+
+            var uniforms = {
+                mainTex:{type:'t',value:texture},
+                normalMap:{type:'t',value:normalMap},
+                iResolution:{type:'v2',value:new THREE.Vector2(width,height)},
+                iMouseSource:{type:'v3',value:new THREE.Vector3(0.0,0.0,200.0)},
+            }
+
+            var material = new THREE.ShaderMaterial({
+                uniforms:uniforms,
+                fragmentShader:document.getElementById('fragmentShader').innerHTML,
+            });
+            var plane = new THREE.PlaneGeometry(width,height);
+            var quad = new THREE.Mesh(plane,material);
+
+            scene.add(quad);
+
+            document.onmousemove = function(event)
+            {
+                uniforms.iMouseSource.value.x = event.clientX;
+                uniforms.iMouseSource.value.y = height - event.clientY;
+            }
+            
+            function render()
+            {
+                requestAnimationFrame(render);
+                renderer.render(scene,camera);
+            }
+
+            render();
+
+        </script>
+
+    </body>
+</html>
