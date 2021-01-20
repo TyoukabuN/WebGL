@@ -10,15 +10,20 @@
             {
                 vec2 uv = gl_FragCoord.xy/iResolution;
                 vec4 diffuse = texture2D(mainTex,uv);
-                vec4 normal = texture2D(normalMap,uv)* 2.0 -1.0 ;
+                vec4 normal = texture2D(normalMap,uv);
+                normal.z = 0.8;
+                normal.w = 1.0;
+
+                normal *= 4.0;
 
                 float dist = distance(gl_FragCoord.xy,iMouseSource.xy);
                 //gl_FragColor = diffuse * (max(iMouseSource.z - dist,0.0)/iMouseSource.z);
 
-                vec3 light = normalize(vec3(iMouseSource.xy,1.0));
+                vec3 light = vec3(iMouseSource.xy/iResolution,0.5).xyz;
                 
                 
-                gl_FragColor = diffuse * max(dot(light,normalize(normal.rgb)),0.0);
+                gl_FragColor = diffuse * max(dot(normalize(light),normalize(normal.rgb)),0.0);
+                //gl_FragColor = vec4(normalize(light),1.0) ;
             }
         </script>
     </head>
@@ -77,7 +82,7 @@
             document.onmousemove = function(event)
             {
                 uniforms.iMouseSource.value.x = event.clientX;
-                uniforms.iMouseSource.value.y = height - event.clientY;
+                uniforms.iMouseSource.value.y = window.innerHeight - event.clientY;
             }
             
             function render()
