@@ -10,18 +10,21 @@
             {
                 vec2 uv = gl_FragCoord.xy/iResolution;
                 vec4 diffuse = texture2D(mainTex,uv);
-                vec3 normal = texture2D(normalMap,uv).rgb;
-                normal.z = 0.8;
+                vec3 normal = texture2D(normalMap,uv).rgb - 0.5;
+                normal.z = 0.4;
 
-                normal *= 4.0;
+                normal *= 5.0;
 
                 float dist = distance(gl_FragCoord.xy,iMouseSource.xy);
                 //gl_FragColor = diffuse * (max(iMouseSource.z - dist,0.0)/iMouseSource.z);
 
-                vec3 light = vec3(iMouseSource.xy/iResolution,0.5).xyz;
+                vec2 mousePos = iMouseSource.xy/iResolution;
+                vec3 lightDir = vec3(mousePos-uv,0.4);
                 
-                
-                gl_FragColor = diffuse * max(dot(normalize(light),normalize(normal)),0.0);
+                lightDir *= 2.0;
+
+                gl_FragColor = diffuse * max(dot(lightDir,normal),0.0) * (max(iMouseSource.z - dist,0.0)/iMouseSource.z);
+                //gl_FragColor.xyz = normalize(normal);
             }
         </script>
     </head>
@@ -61,11 +64,13 @@
                 magFilter:THREE.LinearFilter,
             });
 
+		    var tex = THREE.ImageUtils.loadTexture("tex.jpg");
+
             var uniforms = {
                 mainTex:{type:'t',value:texture},
                 normalMap:{type:'t',value:normalMap},
                 iResolution:{type:'v2',value:new THREE.Vector2(width,height)},
-                iMouseSource:{type:'v3',value:new THREE.Vector3(0.0,0.0,200.0)},
+                iMouseSource:{type:'v3',value:new THREE.Vector3(0.0,0.0,280.0)},
             }
 
             var material = new THREE.ShaderMaterial({
