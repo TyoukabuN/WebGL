@@ -200,6 +200,7 @@
         </script>
         <script id = "fs_hsb_private_expand_shrink" type="x-shader/x-fragment">
             #define TWO_PI 6.28318530718
+            #define PI 3.14159265359
 
             uniform vec2 u_resolution;
             uniform float u_time;
@@ -255,11 +256,14 @@
                 
 
                 pct = layer(st,0.8,0.2);
-                float pct2 = plotX(st,abs(sin(st.x)),0.1);
-                //color = vec3(pct2);
-                color = pct2 * (pct * vec3(1.0,0.0,0.0)) + (1.0 - pct2) + color;
-                pct = layer(st,0.6,0.2);
-                color += pct * vec3(0.0,1.0,0.0);
+                //float pct2 = plotX(st,0.4,0.5);
+                float pct2 = sin(st.x*PI);
+                color += pct2 * vec3(1.0,0.0,0.0);
+
+                //pct = layer(st,0.6,0.1);
+                pct2 = sin(st.x*PI + PI/2.0);
+                color += pct2 * vec3(0.0,1.0,0.0);
+                color *= pct;
 
                 gl_FragColor = vec4(color,1.0);
             }
