@@ -9,7 +9,7 @@
             "type": "chrome",
             "request": "launch",
             "name": "针对 localhost 启动 Chrome",
-            "url": "F:/Tyous/WebGL/index.html",
+            "url": "D:/worldspace/WebGL/index.html",
             "webRoot": "${workspaceFolder}"
         }
     ]
