@@ -50,7 +50,7 @@
             vec3 colorB = vec3(1.000,0.833,0.224);
             
             float plot (vec2 st, float pct){
-              return  smoothstep( pct-0., pct, st.y) -
+              return  smoothstep( pct-0.01, pct, st.y) -
                       smoothstep( pct, pct+0.01, st.y);
             }
 
@@ -75,6 +75,192 @@
                 color = mix(color,vec3(0.0,1.0,0.0),plot(st,pct.g));
                 color = mix(color,vec3(0.0,0.0,1.0),plot(st,pct.b));
             
+                gl_FragColor = vec4(color,1.0);
+            }
+        </script>
+        <script id = "fs_hsb" type="x-shader/x-fragment">
+            uniform vec2 u_resolution;
+            uniform float u_time;
+            
+            vec3 rgb2hsb( in vec3 c ){
+                vec4 K = vec4(0.0, -1.0 / 3.0, 2.0 / 3.0, -1.0);
+                vec4 p = mix(vec4(c.bg, K.wz),
+                             vec4(c.gb, K.xy),
+                             step(c.b, c.g));
+                vec4 q = mix(vec4(p.xyw, c.r),
+                             vec4(c.r, p.yzx),
+                             step(p.x, c.r));
+                float d = q.x - min(q.w, q.y);
+                float e = 1.0e-10;
+                return vec3(abs(q.z + (q.w - q.y) / (6.0 * d + e)),
+                            d / (q.x + e),
+                            q.x);
+            }
+            
+            //  Function from Iñigo Quiles
+            //  https://www.shadertoy.com/view/MsS3Wc
+            vec3 hsb2rgb( in vec3 c ){
+                vec3 rgb = clamp(abs(mod(c.x*6.0+vec3(0.0,4.0,2.0),
+                                         6.0)-3.0)-1.0,
+                                 0.0,
+                                 1.0 );
+                rgb = rgb*rgb*(3.0-2.0*rgb);
+                return c.z * mix(vec3(1.0), rgb, c.y);
+            }
+            
+            void main(){
+                vec2 st = gl_FragCoord.xy/u_resolution;
+                vec3 color = vec3(0.0);
+            
+                // We map x (0.0 - 1.0) to the hue (0.0 - 1.0)
+                // And the y (0.0 - 1.0) to the brightness
+                color = hsb2rgb(vec3(st.x,1.0,st.y));
+            
+                gl_FragColor = vec4(color,1.0);
+            }
+        </script>
+        <script id = "fs_hsb_polar" type="x-shader/x-fragment">
+            #define TWO_PI 6.28318530718
+
+            uniform vec2 u_resolution;
+            uniform float u_time;
+
+            //  Function from Iñigo Quiles
+            //  https://www.shadertoy.com/view/MsS3Wc
+            vec3 hsb2rgb( in vec3 c ){
+                vec3 rgb = clamp(abs(mod(c.x*6.0+vec3(0.0,4.0,2.0),
+                                        6.0)-3.0)-1.0,
+                                0.0,
+                                1.0 );
+                rgb = rgb*rgb*(3.0-2.0*rgb);
+                return c.z * mix( vec3(1.0), rgb, c.y);
+            }
+
+            void main(){
+                vec2 st = gl_FragCoord.xy/u_resolution;
+                vec3 color = vec3(0.0);
+
+                // Use polar coordinates instead of cartesian
+                vec2 toCenter = vec2(0.5)-st;
+                float angle = atan(toCenter.y,toCenter.x);
+                float radius = length(toCenter)*2.0;
+
+                // Map the angle (-PI to PI) to the Hue (from 0 to 1)
+                // and the Saturation to the radius
+                color = hsb2rgb(vec3((angle/TWO_PI)+0.5,radius,1.0));
+
+                gl_FragColor = vec4(color,1.0);
+            }
+        </script>
+        <script id = "fs_hsb_polar_private_wheel" type="x-shader/x-fragment">
+            #define TWO_PI 6.28318530718
+
+            uniform vec2 u_resolution;
+            uniform float u_time;
+
+            //  Function from Iñigo Quiles
+            //  https://www.shadertoy.com/view/MsS3Wc
+            vec3 hsb2rgb( in vec3 c ){
+                vec3 rgb = clamp(abs(mod(c.x*6.0+vec3(0.0,4.0,2.0),
+                                        6.0)-3.0)-1.0,
+                                0.0,
+                                1.0 );
+                rgb = rgb*rgb*(3.0-2.0*rgb);
+                return c.z * mix( vec3(1.0), rgb, c.y);
+            }
+
+            float wheel(vec2 st,float radis,float width)
+            {
+                float dis = distance(vec2(0.0),st);
+                return step(radis+width,dis) - step(radis+width*2.0,dis);
+            }
+
+            float wheelSmooth(vec2 st,float radis,float width)
+            {
+                float dis = distance(vec2(0.0),st);
+                return smoothstep(radis,radis+width,dis) - smoothstep(radis+width,radis+width*2.0,dis);
+            }
+
+            void main(){
+                vec2 st = gl_FragCoord.xy/u_resolution;
+                vec3 color = vec3(0.0);
+
+                // Use polar coordinates instead of cartesian
+                vec2 toCenter = vec2(0.5)-st;
+                float angle = atan(toCenter.y,toCenter.x);
+                float radius = length(toCenter)*2.0;
+
+                // Map the angle (-PI to PI) to the Hue (from 0 to 1)
+                // and the Saturation to the radius
+                color = hsb2rgb(vec3((angle/TWO_PI)+0.5,radius,1.0));
+
+                float pct = wheel(toCenter,0.2,0.1);
+                gl_FragColor = pct * vec4(color,1.0);
+            }
+        </script>
+        <script id = "fs_hsb_private_expand_shrink" type="x-shader/x-fragment">
+            #define TWO_PI 6.28318530718
+
+            uniform vec2 u_resolution;
+            uniform float u_time;
+
+            //  Function from Iñigo Quiles
+            //  https://www.shadertoy.com/view/MsS3Wc
+            vec3 hsb2rgb( in vec3 c ){
+                vec3 rgb = clamp(abs(mod(c.x*6.0+vec3(0.0,4.0,2.0),
+                                        6.0)-3.0)-1.0,
+                                0.0,
+                                1.0 );
+                rgb = rgb*rgb*(3.0-2.0*rgb);
+                return c.z * mix( vec3(1.0), rgb, c.y);
+            }
+
+            float wheel(vec2 st,float radius,float width)
+            {
+                float dis = distance(vec2(0.0),st);
+                return step(radius+width,dis) - step(radius+width*2.0,dis);
+            }
+
+            float layer(vec2 st,float startY,float width)
+            {
+                return step(startY,st.y) - step(startY + width,st.y);
+            }
+
+            float plotX(vec2 st,float pct,float width)
+            {
+                return smoothstep(pct-width,pct,st.x) - smoothstep(pct,pct+width,st.x);
+            }
+
+            float wheelSmooth(vec2 st,float radius,float width)
+            {
+                float dis = distance(vec2(0.0),st);
+                return smoothstep(radius,radius+width,dis) - smoothstep(radius+width,radius+width*2.0,dis);
+            }
+
+            void main(){
+                vec2 st = gl_FragCoord.xy/u_resolution;
+                vec3 color = vec3(0.0);
+
+                // Use polar coordinates instead of cartesian
+                vec2 toCenter = vec2(0.5)-st;
+                float angle = atan(toCenter.y,toCenter.x);
+                float radius = length(toCenter)*2.0;
+
+                // Map the angle (-PI to PI) to the Hue (from 0 to 1)
+                // and the Saturation to the radius
+                //color = hsb2rgb(vec3((angle/TWO_PI)+0.5,radius,1.0));
+
+                //float pct = wheel(toCenter,0.2,0.1);
+                float pct = 1.0;
+                
+
+                pct = layer(st,0.8,0.2);
+                float pct2 = plotX(st,abs(sin(st.x)),0.1);
+                //color = vec3(pct2);
+                color = pct2 * (pct * vec3(1.0,0.0,0.0)) + (1.0 - pct2) + color;
+                pct = layer(st,0.6,0.2);
+                color += pct * vec3(0.0,1.0,0.0);
+
                 gl_FragColor = vec4(color,1.0);
             }
         </script>
@@ -112,7 +298,7 @@
                 var material = new THREE.ShaderMaterial( {
                     uniforms: uniforms,
                     vertexShader: document.getElementById( 'vertexShader' ).textContent,
-                    fragmentShader: document.getElementById( 'fs_color' ).textContent
+                    fragmentShader: document.getElementById( 'fs_hsb_private_expand_shrink' ).textContent
                 } );
 
                 var mesh = new THREE.Mesh( geometry, material );
