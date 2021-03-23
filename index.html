@@ -252,18 +252,31 @@
                 //color = hsb2rgb(vec3((angle/TWO_PI)+0.5,radius,1.0));
 
                 //float pct = wheel(toCenter,0.2,0.1);
-                float pct = 1.0;
+                float mix = 0.0;
+                float clannel = 0.0;
+                float gradient = 0.0;
+                vec3 spectrum = vec3(0.0);
                 
+                //red
+                mix = layer(st,0.0,0.2);
+                clannel = layer(st,0.8,0.2);
+                gradient = plotX(st,0.18,0.4);
+                spectrum = gradient * vec3(1.0,0.0,0.0);
+                color += spectrum * (clannel + mix);
 
-                pct = layer(st,0.8,0.2);
-                //float pct2 = plotX(st,0.4,0.5);
-                float pct2 = sin(st.x*PI);
-                color += pct2 * vec3(1.0,0.0,0.0);
+                //green
+                mix = layer(st,0.0,0.2);
+                clannel = layer(st,0.6,0.2);
+                gradient = plotX(st,0.4,0.4);
+                spectrum = gradient * vec3(0.0,1.0,0.0);
+                color += spectrum * (clannel + mix);
 
-                //pct = layer(st,0.6,0.1);
-                pct2 = sin(st.x*PI + PI/2.0);
-                color += pct2 * vec3(0.0,1.0,0.0);
-                color *= pct;
+                //blue
+                mix = layer(st,0.0,0.2);
+                clannel = layer(st,0.4,0.2);
+                gradient = plotX(st,0.68,0.46);
+                spectrum = gradient * vec3(0.0,0.0,1.0);
+                color += spectrum * (clannel + mix);
 
                 gl_FragColor = vec4(color,1.0);
             }
