@@ -282,6 +282,24 @@
             }
         </script>
     </head>
+    <script id="fs_shape" type="x-shader/x-fragment">
+        #define PI 3.14159265359
+
+        uniform vec2 u_resolution;
+        uniform float u_time;
+
+        void main()
+        {
+            vec2 st = gl_FragCoord.xy/u_resolution;
+
+            float left = step(0.1,st.x);
+            float botton = step(0.1,st.y);
+            float top = step(st.y,0.9);
+            float right = step(st.x,0.9);
+
+            gl_FragColor = vec4(1.0) * left * botton * top * right;
+        }
+    </script>
     <style>
         body {margin: 0;}
     </style>
@@ -315,7 +333,7 @@
                 var material = new THREE.ShaderMaterial( {
                     uniforms: uniforms,
                     vertexShader: document.getElementById( 'vertexShader' ).textContent,
-                    fragmentShader: document.getElementById( 'fs_hsb_private_expand_shrink' ).textContent
+                    fragmentShader: document.getElementById( 'fs_shape' ).textContent
                 } );
 
                 var mesh = new THREE.Mesh( geometry, material );
