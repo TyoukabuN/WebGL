@@ -353,7 +353,7 @@
         float circle(vec2 st)
         {
             st -= vec2(0.5,0.5);
-            return distance(st,vec2(0.))
+            return distance(st,vec2(0.));
         }
 
         void main()
@@ -364,6 +364,9 @@
             
             pct = circle(st);
             pct = mod(pct - abs(u_time / 8.),0.1);
+
+            //pct += mod(st.x - abs(u_time / 8.),0.1);
+
 
             //pct checker
             color = vec3(pct);
@@ -432,7 +435,7 @@
                 var material = new THREE.ShaderMaterial( {
                     uniforms: uniforms,
                     vertexShader: document.getElementById( 'vertexShader' ).textContent,
-                    fragmentShader: document.getElementById( 'fs_shape_rect_scanline' ).textContent
+                    fragmentShader: document.getElementById( 'fs_shape_circle_scanline' ).textContent
                 } );
 
                 var mesh = new THREE.Mesh( geometry, material );
