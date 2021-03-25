@@ -304,6 +304,28 @@
             gl_FragColor = vec4(1.0) * pct;
         }
     </script>
+    <script id="fs_shape_circle" type="x-shader/x-fragment">
+        #define PI 3.14159265359
+
+        uniform vec2 u_resolution;
+        uniform float u_time;
+
+        void main()
+        {
+            vec2 st = gl_FragCoord.xy/u_resolution;
+
+            //float left = step(0.1,st.x);
+            //float botton = step(0.1,st.y);
+            //float top = step(st.y,0.9);
+            //float right = step(st.x,0.9);
+            //gl_FragColor = vec4(1.0) * left * botton * top * right;
+
+            vec2 lb = step(vec2(0.1),st);
+            vec2 rt = step(st,vec2(0.9));
+            float pct = lb.x * lb.y * rt.x * rt.y;
+            gl_FragColor = vec4(1.0) * pct;
+        }
+    </script>
     <style>
         body {margin: 0;}
     </style>
