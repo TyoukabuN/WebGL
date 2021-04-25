@@ -388,7 +388,7 @@
         {
             vec2 st = gl_FragCoord.xy/u_resolution;
             float pct = 0.0;
-            vec3 color = vec3(0.0);
+            vec3 color = vec3(0.0);z
             
             pct = mod(st.x - abs(u_time / 8.),0.1);
 
@@ -402,6 +402,96 @@
             gl_FragColor=vec4(color,1.0);
         }
     </script>
+    <script id="fs_shape_circle_frac" type="x-shader/x-fragment">
+        uniform vec2 u_resolution;
+        uniform vec2 u_mouse;
+        uniform float u_time;
+        
+        void main(){
+          vec2 st = gl_FragCoord.xy/u_resolution.xy;
+          st.x *= u_resolution.x/u_resolution.y;
+          vec3 color = vec3(0.0);
+          float d = 0.0;
+        
+          // Remap the space to -1. to 1.
+          st = st *2.-1.;
+        
+          // Make the distance field
+          d = length( abs(st)-.3 );
+          // d = length( min(abs(st)-.3,0.) );
+          // d = length( max(abs(st)-.3,0.) );
+        
+          // Visualize the distance field
+          gl_FragColor = vec4(vec3(fract(d)),1.0);
+        
+          // Drawing with the distance field
+          // gl_FragColor = vec4(vec3( step(.3,d) ),1.0);
+          // gl_FragColor = vec4(vec3( step(.3,d) * step(d,.4)),1.0);
+          // gl_FragColor = vec4(vec3( smoothstep(.3,.4,d)* smoothstep(.6,.5,d)) ,1.0);
+        }
+    </script>
+    <script id="pratice_circle matrix" type="x-shader/x-fragment">
+        uniform vec2 u_resolution;
+        uniform vec2 u_mouse;
+        uniform float u_time;
+        void main()
+        {
+            vec2 st = gl_FragCoord.xy/u_resolution.xy;
+            vec2 uv = gl_FragCoord.xy/u_resolution.xy;
+            st *= 40.0;
+            vec2 index = ceil(st);
+            
+            st = fract(st);
+            
+            //vec2 i = st/2.0;
+            
+            
+            //float dist = length(st - (0.5 + vec2(cos(u_time/6.0),sin(u_time/6.0))*0.2 * index.xx * 0.15  ))
+            float dist = length(st - (0.5 + vec2(0,sin(u_time+index.x * 0.2))*0.2   ));
+            gl_FragColor = vec4(vec3(step(0.2,dist)),1.0);
+            dist = length(st - 0.5);
+            gl_FragColor *=  vec4(vec3(step(0.16,dist)),1.0);
+            gl_FragColor = 1.0 - gl_FragColor;
+            gl_FragColor *= vec4(clamp(uv+vec2(0,sin(u_time+index.x * 0.2))*0.2,0.0,1.0),1.0,1.0);
+        }
+    </script>
+    <script id="for_pratice" type="x-shader/x-fragment">
+        uniform vec2 u_resolution;
+        uniform vec2 u_mouse;
+        uniform float u_time;
+        float rect(vec2 st,vec2 pos,vec2 size)
+        {
+            vec2 area = step(pos-size,st)-step(pos+size,st);
+            return area.x + area.y - 1.0;
+        }
+        void main()
+        {
+            vec2 st = gl_FragCoord.xy/u_resolution.xy;
+
+            vec2 uv = gl_FragCoord.xy/u_resolution.xy;
+            uv *= 20.0;
+            vec2 index = ceil(uv);
+            
+            uv = fract(uv);
+            float dist = length(uv - (0.5 + vec2(0,sin(u_time+index.x * 0.2))*0.2   ));
+            vec3 color = vec3(step(0.31,dist));
+            dist = length(uv - 0.5);
+            color *=  vec3(step(0.25,dist));
+            color = 1.0 - color;
+            color *= vec3(clamp(uv+vec2(0,sin(u_time+index.x * 0.2))*0.2,0.0,1.0),0.0);
+
+            color = vec3(floor(uv)/20.0,0.0);
+
+
+            gl_FragColor = vec4(vec3(st.x),1.0);
+            gl_FragColor = vec4(vec3(smoothstep(st.x-0.02,st.x,st.y) - smoothstep(st.x,st.x+0.02,st.y)),1.0);
+            gl_FragColor = vec4(vec3(rect(st,vec2(0.5,0.7),vec2(0.08,0.08))) * color,1.0);
+            gl_FragColor = vec4(color,1.0);
+        }
+    </script>
+
+
+
     <style>
         body {margin: 0;}
     </style>
@@ -435,7 +525,7 @@
                 var material = new THREE.ShaderMaterial( {
                     uniforms: uniforms,
                     vertexShader: document.getElementById( 'vertexShader' ).textContent,
-                    fragmentShader: document.getElementById( 'fs_shape_circle_scanline' ).textContent
+                    fragmentShader: document.getElementById( 'for_pratice' ).textContent
                 } );
 
                 var mesh = new THREE.Mesh( geometry, material );
